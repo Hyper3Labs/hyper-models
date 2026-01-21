@@ -125,3 +125,4 @@ site/
 *.temp
 .cache/
 *.hf/
+AGENTS.md
