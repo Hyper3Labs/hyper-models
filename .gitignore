@@ -59,7 +59,7 @@ hycoclip_repo/
 # Package Management
 # -----------------------------------------------------------------------------
 # uv lockfile - can be committed for reproducibility, but optional
-# uv.lock
+uv.lock
 
 # pip
 pip-log.txt
@@ -126,3 +126,4 @@ site/
 .cache/
 *.hf/
 AGENTS.md
+.specstory/

@@ -238,7 +238,7 @@ def main() -> int:
         print("\n[DRY RUN] Would upload the above files.")
         return 0
 
-    # Import huggingface_hub
+    # Import huggingface_hub and onnx
     try:
         from huggingface_hub import HfApi
     except ImportError as exc:
@@ -248,29 +248,55 @@ def main() -> int:
             "Then login with: hf auth login"
         ) from exc
 
+    try:
+        import onnx
+        from onnx.external_data_helper import convert_model_to_external_data
+    except ImportError as exc:
+        raise SystemExit(
+            "Missing dependency: onnx\n"
+            "Install with: uv add onnx"
+        ) from exc
+
     api = HfApi()
 
     # Create repo if needed
     print("\nCreating repository (if needed)...")
     api.create_repo(repo_id=args.repo_id, private=args.private, exist_ok=True)
 
-    # Upload ONNX file(s) to model subdirectory
-    print(f"Uploading {model_name}/model.onnx...")
-    api.upload_file(
-        repo_id=args.repo_id,
-        path_or_fileobj=str(onnx_path),
-        path_in_repo=f"{model_name}/model.onnx",
-        commit_message=f"Add {model_name} ONNX model",
+    # Rewrite external data location to match the uploaded filename (model.onnx.data)
+    # This is necessary because the original export may have used a different filename.
+    print("Rewriting ONNX external data location to 'model.onnx.data'...")
+    import tempfile
+    onnx_model = onnx.load(str(onnx_path), load_external_data=True)
+    convert_model_to_external_data(
+        onnx_model,
+        all_tensors_to_one_file=True,
+        location="model.onnx.data",
+        size_threshold=1024,
     )
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_onnx = Path(tmpdir) / "model.onnx"
+        onnx.save_model(onnx_model, str(tmp_onnx))
+        tmp_data = Path(tmpdir) / "model.onnx.data"
 
-    if data_path is not None:
-        print(f"Uploading {model_name}/model.onnx.data...")
+        # Upload rewritten ONNX file
+        print(f"Uploading {model_name}/model.onnx...")
         api.upload_file(
             repo_id=args.repo_id,
-            path_or_fileobj=str(data_path),
-            path_in_repo=f"{model_name}/model.onnx.data",
-            commit_message=f"Add {model_name} ONNX weights",
+            path_or_fileobj=str(tmp_onnx),
+            path_in_repo=f"{model_name}/model.onnx",
+            commit_message=f"Add {model_name} ONNX model",
         )
+
+        # Upload the rewritten external data file
+        if tmp_data.exists():
+            print(f"Uploading {model_name}/model.onnx.data...")
+            api.upload_file(
+                repo_id=args.repo_id,
+                path_or_fileobj=str(tmp_data),
+                path_in_repo=f"{model_name}/model.onnx.data",
+                commit_message=f"Add {model_name} ONNX weights",
+            )
 
     # Update repo README with model table
     print("Updating README.md...")

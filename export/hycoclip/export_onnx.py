@@ -108,6 +108,25 @@ def main() -> None:
         verbose=False,
     )
 
+    # Normalize external data filename to match the ONNX filename + ".data"
+    # This ensures compatibility when files are renamed (e.g., on HuggingFace Hub)
+    onnx = importlib.import_module("onnx")
+    external_data_helper = importlib.import_module("onnx.external_data_helper")
+
+    model = onnx.load(str(onnx_path), load_external_data=True)
+    external_data_helper.convert_model_to_external_data(
+        model,
+        all_tensors_to_one_file=True,
+        location=onnx_path.name + ".data",
+        size_threshold=1024,
+    )
+    onnx.save_model(model, str(onnx_path))
+
+    # Remove old .data file from torch.onnx.export (if different from normalized name)
+    old_data = onnx_path.with_suffix(".onnx.data")
+    if old_data.exists() and old_data.name != onnx_path.name + ".data":
+        old_data.unlink()
+
     print(f"Wrote ONNX: {onnx_path}")
 
 

@@ -1,8 +1,12 @@
-"""Model registry and metadata."""
+"""Model registry - maps model names to hub locations and metadata."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+
+from hyper_models.preprocessing import ImageConfig
+
+__all__ = ["ModelInfo", "list_models", "get_model_info"]
 
 
 @dataclass
@@ -10,56 +14,65 @@ class ModelInfo:
     """Metadata for a registered model."""
 
     name: str
-    geometry: str  # 'hyperboloid', 'poincare', 'sphere'
+    geometry: str  # 'hyperboloid', 'poincare', 'sphere', 'euclidean'
     dim: int
     hub_id: str
     license: str
     description: str = ""
+    input_name: str = "image"
+    output_name: str | None = None
+    image_config: ImageConfig = field(default_factory=ImageConfig)
 
 
-# Model registry
 _MODELS: dict[str, ModelInfo] = {
     "hycoclip-vit-s": ModelInfo(
         name="hycoclip-vit-s",
         geometry="hyperboloid",
-        dim=512,
-        hub_id="hyperview-org/hyperbolic-clip",
+        dim=513,
+        hub_id="mnm-matin/hyperbolic-clip",
         license="CC-BY-NC",
-        description="HyCoCLIP ViT-Small image encoder",
+        description="HyCoCLIP ViT-Small (512D hyperboloid)",
+        output_name="embedding_hyperboloid",
     ),
-    # Future models:
-    # "hycoclip-vit-b": ModelInfo(...),
-    # "meru-vit-s": ModelInfo(...),
+    "hycoclip-vit-b": ModelInfo(
+        name="hycoclip-vit-b",
+        geometry="hyperboloid",
+        dim=513,
+        hub_id="mnm-matin/hyperbolic-clip",
+        license="CC-BY-NC",
+        description="HyCoCLIP ViT-Base (512D hyperboloid)",
+        output_name="embedding_hyperboloid",
+    ),
+    "meru-vit-s": ModelInfo(
+        name="meru-vit-s",
+        geometry="hyperboloid",
+        dim=513,
+        hub_id="mnm-matin/hyperbolic-clip",
+        license="CC-BY-NC",
+        description="MERU ViT-Small (512D hyperboloid)",
+        output_name="embedding_hyperboloid",
+    ),
+    "meru-vit-b": ModelInfo(
+        name="meru-vit-b",
+        geometry="hyperboloid",
+        dim=513,
+        hub_id="mnm-matin/hyperbolic-clip",
+        license="CC-BY-NC",
+        description="MERU ViT-Base (512D hyperboloid)",
+        output_name="embedding_hyperboloid",
+    ),
 }
 
 
 def list_models(geometry: str | None = None) -> list[str]:
-    """List available model names.
-
-    Args:
-        geometry: Filter by geometry type ('hyperboloid', 'poincare', 'sphere')
-
-    Returns:
-        List of model names
-    """
+    """List available model names, optionally filtered by geometry."""
     if geometry is None:
         return list(_MODELS.keys())
     return [name for name, info in _MODELS.items() if info.geometry == geometry]
 
 
 def get_model_info(name: str) -> ModelInfo:
-    """Get metadata for a model.
-
-    Args:
-        name: Model name
-
-    Returns:
-        ModelInfo dataclass
-
-    Raises:
-        KeyError: If model not found
-    """
+    """Get metadata for a model. Raises KeyError if not found."""
     if name not in _MODELS:
-        available = ", ".join(_MODELS.keys())
-        raise KeyError(f"Model '{name}' not found. Available: {available}")
+        raise KeyError(f"Model '{name}' not found. Available: {', '.join(_MODELS.keys())}")
     return _MODELS[name]
