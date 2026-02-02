@@ -74,10 +74,12 @@ embeddings = model.encode(batch)
 
 ### Hyperspherical
 
-| Model | Available | Paper | Code |
-|-------|:---------:|-------|------|
-| `sphereface` | — | [CVPR 2017](https://arxiv.org/abs/1704.08063) | [wy1iu/sphereface](https://github.com/wy1iu/sphereface) |
-| `arcface` | — | [CVPR 2019](https://arxiv.org/abs/1801.07698) | [deepinsight/insightface](https://github.com/deepinsight/insightface) |
+| Model            | Available | Paper | Code |
+|------------------|:---------:|-------|------|
+| `megadescriptor` | [![HF](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://huggingface.co/BVRA/MegaDescriptor-L-384) | [WACV 2024](https://openaccess.thecvf.com/content/WACV2024/papers/Cermak_WildlifeDatasets_An_Open-Source_Toolkit_for_Animal_Re-Identification_WACV_2024_paper.pdf) | [WildlifeDatasets/wildlife-datasets](https://github.com/WildlifeDatasets/wildlife-datasets) |
+| `sphereface`     | — | [CVPR 2017](https://arxiv.org/abs/1704.08063) | [wy1iu/sphereface](https://github.com/wy1iu/sphereface) |
+| `arcface`       | — | [CVPR 2019](https://arxiv.org/abs/1801.07698) | [deepinsight/insightface](https://github.com/deepinsight/insightface) |
+
 
 ### Product Manifolds
 
