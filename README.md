@@ -72,7 +72,7 @@ embeddings = model.encode(batch)
 | `hie` | — | [CVPR 2020](https://arxiv.org/abs/1904.02239) | [leymir/hyperbolic-image-embeddings](https://github.com/leymir/hyperbolic-image-embeddings) |
 | `hcnn` | — | [ICLR 2024](https://openreview.net/forum?id=ekz1hN5QNh) | [kschwethelm/HyperbolicCV](https://github.com/kschwethelm/HyperbolicCV) |
 
-### Spherical
+### Hyperspherical
 
 | Model | Available | Paper | Code |
 |-------|:---------:|-------|------|
