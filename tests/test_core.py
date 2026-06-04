@@ -12,15 +12,18 @@ class TestRegistry:
         models = hyper_models.list_models()
         assert len(models) >= 4
         assert "hycoclip-vit-s" in models
+        assert "hyper3-clip-v0.5" in models
 
     def test_list_loaders(self):
         loaders = hyper_models.list_loaders()
         assert "onnx" in loaders
         assert "uncha-image-torch" in loaders
+        assert "hyper3-clip-torch" in loaders
 
     def test_list_models_filter(self):
         hyperbolic = hyper_models.list_models(geometry="hyperboloid")
-        assert all("vit" in m for m in hyperbolic)
+        assert "hyper3-clip-v0.5" in hyperbolic
+        assert all(hyper_models.get_model_info(m).geometry == "hyperboloid" for m in hyperbolic)
 
     def test_get_model_info(self):
         info = hyper_models.get_model_info("hycoclip-vit-s")
@@ -40,6 +43,15 @@ class TestRegistry:
         assert info.optional_dependencies == ("ml",)
         assert info.hub_id == "hayeonkim/uncha"
         assert info.hub_path.endswith(".pth")
+
+    def test_hyper3_clip_model_info(self):
+        info = hyper_models.get_model_info("hyper3-clip-v0.5")
+        assert info.geometry == "hyperboloid"
+        assert info.dim == 513
+        assert info.loader == "hyper3-clip-torch"
+        assert info.optional_dependencies == ("ml",)
+        assert info.hub_id == "hyper3labs/hyper3-clip-v0.5"
+        assert info.hub_patterns == ("config.yaml", "model.safetensors")
 
 
 class TestPreprocessing:
@@ -85,6 +97,3 @@ class TestModel:
         embeddings = [model.encode_images([img]) for img in images]
         embeddings = np.vstack(embeddings)
         assert embeddings.shape == (3, 513)
-
-
-

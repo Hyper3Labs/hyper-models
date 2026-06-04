@@ -14,7 +14,7 @@ from PIL import Image
 
 from hyper_models.preprocessing import ImageConfig, preprocess_images
 
-__all__ = ["UNCHATorchModel"]
+__all__ = ["Hyper3ClipTorchModel", "UNCHATorchModel"]
 
 
 class _UNCHAImageEncoder:
@@ -162,7 +162,9 @@ class UNCHATorchModel:
         if isinstance(checkpoint_obj, dict):
             return checkpoint_obj
 
-        raise TypeError("Unexpected UNCHA checkpoint format; expected dict or {'model': state_dict}")
+        raise TypeError(
+            "Unexpected UNCHA checkpoint format; expected dict or {'model': state_dict}"
+        )
 
     def _ensure_encoder(self) -> None:
         if self._encoder is not None:
@@ -227,4 +229,100 @@ class UNCHATorchModel:
 
     def encode_images(self, images: list[Image.Image]) -> np.ndarray:
         """Encode PIL images to embeddings (B, D)."""
+        return self.encode(preprocess_images(images, self._image_config))
+
+
+class Hyper3ClipTorchModel:
+    """Hyper3-CLIP catalog entry runtime using torch for image inference."""
+
+    def __init__(
+        self,
+        checkpoint_path: Path,
+        *,
+        geometry: str,
+        dim: int,
+        image_config: ImageConfig | None = None,
+        device: str | None = None,
+    ) -> None:
+        self._checkpoint_path = checkpoint_path
+        self._config_path = checkpoint_path.with_name("config.yaml")
+        self.geometry = geometry
+        self.dim = dim
+        self._image_config = image_config or ImageConfig()
+        self._device_override = device
+
+        self._torch = None
+        self._device = None
+        self._model = None
+
+    def _import_ml_stack(self) -> tuple[Any, Any, Any]:
+        try:
+            import torch
+            import yaml
+            from safetensors.torch import load_file
+        except ImportError as e:
+            raise ImportError(
+                "This catalog entry requires the optional 'ml' dependencies. "
+                "Install with: uv sync --extra ml or uv pip install 'hyper-models[ml]'"
+            ) from e
+
+        return torch, yaml, load_file
+
+    def _resolve_device(self, torch: Any) -> Any:
+        if self._device_override:
+            return torch.device(self._device_override)
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
+
+    def _ensure_model(self) -> None:
+        if self._model is not None:
+            return
+
+        torch, yaml, load_file = self._import_ml_stack()
+        from hyper3_clip import Hyper3CLIP
+
+        if not self._config_path.exists():
+            raise FileNotFoundError(f"Hyper3-CLIP config not found: {self._config_path}")
+        if not self._checkpoint_path.exists():
+            raise FileNotFoundError(f"Hyper3-CLIP checkpoint not found: {self._checkpoint_path}")
+
+        self._torch = torch
+        self._device = self._resolve_device(torch)
+
+        config = yaml.safe_load(self._config_path.read_text(encoding="utf-8"))
+        model_config = dict(config["model"])
+        model_config["vision_pretrained"] = False
+        model_config["text_pretrained"] = False
+        model = Hyper3CLIP(**model_config)
+        state = load_file(self._checkpoint_path, device="cpu")
+        load_result = model.load_state_dict(state, strict=False)
+        missing_non_text = [
+            key for key in load_result.missing_keys if not key.startswith("text_encoder.")
+        ]
+        if missing_non_text:
+            missing = ", ".join(missing_non_text[:8])
+            raise RuntimeError(f"Hyper3-CLIP checkpoint missing required image keys: {missing}")
+        model.to(self._device)
+        model.eval()
+        self._model = model
+
+    def encode(self, inputs: np.ndarray) -> np.ndarray:
+        """Encode preprocessed inputs (B, C, H, W) to embeddings (B, D)."""
+        self._ensure_model()
+
+        assert self._model is not None
+        assert self._torch is not None
+        assert self._device is not None
+
+        images = self._torch.from_numpy(inputs).to(device=self._device, dtype=self._torch.float32)
+        with self._torch.inference_mode():
+            emb = self._model.encode_image(images)
+
+        return np.asarray(emb.detach().cpu().numpy(), dtype=np.float32)
+
+    def encode_images(self, images: list[Image.Image]) -> np.ndarray:
+        """Encode PIL images to Hyper3-CLIP embeddings (B, D)."""
         return self.encode(preprocess_images(images, self._image_config))

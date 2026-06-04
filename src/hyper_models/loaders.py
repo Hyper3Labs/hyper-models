@@ -39,6 +39,17 @@ def _load_uncha_image_torch_model(info: ModelInfo, artifact_path: Path) -> Any:
     )
 
 
+def _load_hyper3_clip_torch_model(info: ModelInfo, artifact_path: Path) -> Any:
+    from hyper_models.torch_models import Hyper3ClipTorchModel
+
+    return Hyper3ClipTorchModel(
+        checkpoint_path=artifact_path,
+        geometry=info.geometry,
+        dim=info.dim,
+        image_config=info.image_config,
+    )
+
+
 def _load_timm_image_route(info: ModelInfo, artifact_path: Path) -> Any:
     raise ValueError(
         f"Model '{info.name}' is a timm model. "
@@ -48,6 +59,7 @@ def _load_timm_image_route(info: ModelInfo, artifact_path: Path) -> Any:
 
 
 _LOADERS: dict[str, LoaderFn] = {
+    "hyper3-clip-torch": _load_hyper3_clip_torch_model,
     "onnx": _load_onnx_model,
     "uncha-image-torch": _load_uncha_image_torch_model,
     "timm-image": _load_timm_image_route,

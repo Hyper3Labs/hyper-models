@@ -24,6 +24,7 @@ class ModelInfo:
     hub_id: str
     hub_path: str
     license: str
+    hub_patterns: tuple[str, ...] | None = None
     loader: str = "onnx"  # e.g. 'onnx', 'uncha-image-torch'
     variant: str | None = None  # optional loader hint (e.g., 'vit_s', 'vit_b')
     optional_dependencies: tuple[str, ...] = ()
@@ -97,6 +98,24 @@ _MODELS: dict[str, ModelInfo] = {
         variant="vit_b",
         optional_dependencies=("ml",),
         description="UNCHA ViT-B/16 checkpoint (HF .pth, torch inference)",
+    ),
+    "hyper3-clip-v0.5": ModelInfo(
+        name="hyper3-clip-v0.5",
+        geometry="hyperboloid",
+        dim=513,
+        hub_id="hyper3labs/hyper3-clip-v0.5",
+        hub_path="model.safetensors",
+        hub_patterns=("config.yaml", "model.safetensors"),
+        license="Unknown",
+        loader="hyper3-clip-torch",
+        optional_dependencies=("ml",),
+        description="Hyper3-CLIP v0.5 ViT-B image encoder (HF safetensors, torch inference)",
+        image_config=ImageConfig(
+            size=224,
+            interpolation="bicubic",
+            mean=(0.485, 0.456, 0.406),
+            std=(0.229, 0.224, 0.225),
+        ),
     ),
     "megadescriptor": ModelInfo(
         name="megadescriptor",

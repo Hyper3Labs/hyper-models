@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +35,12 @@ def load(name: str, *, local_path: str | Path | None = None) -> Any:
         return load_model(info, Path())
 
     if local_path is None:
-        local_dir = snapshot_download(info.hub_id, allow_patterns=[f"{info.hub_path}*"])
+        allow_patterns = list(info.hub_patterns or (f"{info.hub_path}*",))
+        local_dir = snapshot_download(
+            info.hub_id,
+            allow_patterns=allow_patterns,
+            token=os.environ.get("HF_TOKEN"),
+        )
         artifact_path = Path(local_dir) / info.hub_path
     else:
         artifact_path = Path(local_path)

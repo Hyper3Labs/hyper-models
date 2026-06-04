@@ -13,9 +13,9 @@ Example:
 
 from hyper_models.loader import load
 from hyper_models.loaders import list_loaders
-from hyper_models.registry import ModelInfo, get_model_info, list_models
 from hyper_models.models import ONNXModel
 from hyper_models.preprocessing import ImageConfig, preprocess_images
+from hyper_models.registry import ModelInfo, get_model_info, list_models
 
 __all__ = [
     "load",
@@ -27,5 +27,4 @@ __all__ = [
     "ImageConfig",
     "preprocess_images",
 ]
-__version__ = "0.2.0"
-
+__version__ = "0.3.0"
