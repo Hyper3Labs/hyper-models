@@ -232,6 +232,30 @@ class UNCHATorchModel:
         return self.encode(preprocess_images(images, self._image_config))
 
 
+_CHECKPOINT_TEXT_PREFIX = "text_encoder.backbone.text_model."
+_MODEL_TEXT_PREFIX = "text_encoder.backbone."
+
+
+def _align_text_tower_keys(state: dict[str, Any]) -> dict[str, Any]:
+    """Match published Hyper3-CLIP text weights to the model's parameter names.
+
+    The checkpoint stores the text tower under the full Hugging Face
+    ``CLIPTextModel`` path, while :class:`Hyper3CLIP` binds its backbone one
+    level deeper, at ``CLIPTextModel.text_model``. Without this rename the text
+    tower silently loads no pretrained weights and every text embedding comes
+    from a randomly initialised encoder.
+    """
+
+    return {
+        (
+            _MODEL_TEXT_PREFIX + key[len(_CHECKPOINT_TEXT_PREFIX) :]
+            if key.startswith(_CHECKPOINT_TEXT_PREFIX)
+            else key
+        ): value
+        for key, value in state.items()
+    }
+
+
 class Hyper3ClipTorchModel:
     """Hyper3-CLIP catalog entry runtime using torch for image inference."""
 
@@ -297,14 +321,11 @@ class Hyper3ClipTorchModel:
         model_config["vision_pretrained"] = False
         model_config["text_pretrained"] = False
         model = Hyper3CLIP(**model_config)
-        state = load_file(self._checkpoint_path, device="cpu")
+        state = _align_text_tower_keys(load_file(self._checkpoint_path, device="cpu"))
         load_result = model.load_state_dict(state, strict=False)
-        missing_non_text = [
-            key for key in load_result.missing_keys if not key.startswith("text_encoder.")
-        ]
-        if missing_non_text:
-            missing = ", ".join(missing_non_text[:8])
-            raise RuntimeError(f"Hyper3-CLIP checkpoint missing required image keys: {missing}")
+        if load_result.missing_keys:
+            missing = ", ".join(load_result.missing_keys[:8])
+            raise RuntimeError(f"Hyper3-CLIP checkpoint missing required keys: {missing}")
         model.to(self._device)
         model.eval()
         self._model = model
@@ -326,3 +347,21 @@ class Hyper3ClipTorchModel:
     def encode_images(self, images: list[Image.Image]) -> np.ndarray:
         """Encode PIL images to Hyper3-CLIP embeddings (B, D)."""
         return self.encode(preprocess_images(images, self._image_config))
+
+    def encode_texts(self, texts: list[str]) -> np.ndarray:
+        """Encode text queries into the same hyperboloid as the images (B, D)."""
+        self._ensure_model()
+
+        assert self._model is not None
+        assert self._torch is not None
+        assert self._device is not None
+
+        encoded = self._model.tokenizer(
+            list(texts), padding=True, truncation=True, return_tensors="pt"
+        )
+        input_ids = encoded["input_ids"].to(self._device)
+        attention_mask = encoded["attention_mask"].to(self._device)
+        with self._torch.inference_mode():
+            emb = self._model.encode_text(input_ids, attention_mask)
+
+        return np.asarray(emb.detach().cpu().numpy(), dtype=np.float32)

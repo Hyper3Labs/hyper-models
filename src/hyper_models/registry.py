@@ -31,6 +31,7 @@ class ModelInfo:
     description: str = ""
     input_name: str = "image"
     output_name: str | None = None
+    modalities: tuple[str, ...] = ("image",)  # what the loaded model can encode
     image_config: ImageConfig = field(default_factory=ImageConfig)
 
 
@@ -109,7 +110,8 @@ _MODELS: dict[str, ModelInfo] = {
         license="Unknown",
         loader="hyper3-clip-torch",
         optional_dependencies=("ml",),
-        description="Hyper3-CLIP v0.5 ViT-B image encoder (HF safetensors, torch inference)",
+        modalities=("image", "text"),
+        description="Hyper3-CLIP v0.5 ViT-B image+text encoder (HF safetensors, torch inference)",
         image_config=ImageConfig(
             size=224,
             interpolation="bicubic",
