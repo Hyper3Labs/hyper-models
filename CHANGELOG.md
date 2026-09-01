@@ -6,6 +6,11 @@
   backbone one level deeper, and the loader tolerated the resulting "missing"
   keys. Every text weight was silently dropped, leaving a randomly initialised
   text encoder that still returned embeddings.
+- Report the packaged version. `__version__` was a literal that stayed at
+  "0.3.0"; it is now read from the installed distribution metadata.
+- Install on Python 3.10 again. onnxruntime stopped publishing cp310 wheels
+  after 1.23.x, so a universal resolution selected a release that could not be
+  installed on a version this package claims to support.
 
 ### Features
 - Add `Hyper3ClipTorchModel.encode_texts` for text queries in the image
