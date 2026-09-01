@@ -82,4 +82,3 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray, eps: float = 1e-12) -> float
     b = np.asarray(b).reshape(-1)
     denom = (np.linalg.norm(a) * np.linalg.norm(b)) + eps
     return float(np.dot(a, b) / denom)
-

@@ -19,9 +19,7 @@ class TestTextTowerKeyAlignment:
             {"text_encoder.backbone.text_model.embeddings.token_embedding.weight": 1}
         )
 
-        assert aligned == {
-            "text_encoder.backbone.embeddings.token_embedding.weight": 1
-        }
+        assert aligned == {"text_encoder.backbone.embeddings.token_embedding.weight": 1}
 
     def test_non_text_keys_are_untouched(self) -> None:
         state = {

@@ -39,7 +39,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Main repo README (shown on the HF repo page)
 # ---------------------------------------------------------------------------
-REPO_README_TEMPLATE = '''---
+REPO_README_TEMPLATE = """---
 library_name: onnx
 pipeline_tag: feature-extraction
 license: cc-by-nc-4.0
@@ -138,7 +138,7 @@ Based on:
   year={{2023}}
 }}
 ```
-'''
+"""
 
 # Model-specific info for the table
 MODEL_INFO = {
@@ -172,7 +172,9 @@ Example:
         """,
     )
     p.add_argument("--repo-id", required=True, help="HF repo (e.g. mnm-matin/hyperbolic-clip)")
-    p.add_argument("--model", required=True, help="Model name/subfolder (e.g. hycoclip-vit-s, meru-vit-b)")
+    p.add_argument(
+        "--model", required=True, help="Model name/subfolder (e.g. hycoclip-vit-s, meru-vit-b)"
+    )
     p.add_argument("--onnx", required=True, help="Path to .onnx file")
     p.add_argument("--onnx-data", default=None, help="Path to .onnx.data file (external weights)")
     p.add_argument("--private", action="store_true", help="Create repo as private")
@@ -184,7 +186,11 @@ def _get_existing_models(api, repo_id: str) -> list[str]:
     """Get list of model subdirectories already in the repo."""
     try:
         files = list(api.list_repo_tree(repo_id, recursive=False))
-        return [f.path for f in files if f.path not in ("README.md", ".gitattributes") and not f.path.startswith(".")]
+        return [
+            f.path
+            for f in files
+            if f.path not in ("README.md", ".gitattributes") and not f.path.startswith(".")
+        ]
     except Exception:
         return []
 
@@ -193,11 +199,13 @@ def _generate_model_table(models: list[str], repo_id: str) -> str:
     """Generate markdown table of available models."""
     if not models:
         return "| *No models uploaded yet* | | | | |"
-    
+
     rows = []
     for model in sorted(models):
         info = MODEL_INFO.get(model, {"arch": "ViT", "dim": 513, "size": "~100 MB"})
-        rows.append(f"| **{model}** | {info['arch']} | {info['dim']} | {info['size']} | `{model}/model.onnx` |")
+        rows.append(
+            f"| **{model}** | {info['arch']} | {info['dim']} | {info['size']} | `{model}/model.onnx` |"
+        )
     return "\n".join(rows)
 
 
@@ -218,7 +226,7 @@ def main() -> int:
             raise SystemExit(f"ONNX data file not found: {data_path}")
 
     model_name = args.model.strip().lower()
-    
+
     # Show what will be uploaded
     print("=" * 60)
     print("Hugging Face Upload Summary")
@@ -231,7 +239,7 @@ def main() -> int:
     print(f"  - {model_name}/model.onnx ({onnx_path.stat().st_size / 1024 / 1024:.2f} MB)")
     if data_path:
         print(f"  - {model_name}/model.onnx.data ({data_path.stat().st_size / 1024 / 1024:.2f} MB)")
-    print(f"  - README.md (repo card, will be updated)")
+    print("  - README.md (repo card, will be updated)")
     print("=" * 60)
 
     if args.dry_run:
@@ -252,10 +260,7 @@ def main() -> int:
         import onnx
         from onnx.external_data_helper import convert_model_to_external_data
     except ImportError as exc:
-        raise SystemExit(
-            "Missing dependency: onnx\n"
-            "Install with: uv add onnx"
-        ) from exc
+        raise SystemExit("Missing dependency: onnx\nInstall with: uv add onnx") from exc
 
     api = HfApi()
 
@@ -267,6 +272,7 @@ def main() -> int:
     # This is necessary because the original export may have used a different filename.
     print("Rewriting ONNX external data location to 'model.onnx.data'...")
     import tempfile
+
     onnx_model = onnx.load(str(onnx_path), load_external_data=True)
     convert_model_to_external_data(
         onnx_model,
@@ -303,13 +309,13 @@ def main() -> int:
     existing_models = _get_existing_models(api, args.repo_id)
     if model_name not in existing_models:
         existing_models.append(model_name)
-    
+
     model_table = _generate_model_table(existing_models, args.repo_id)
     readme_content = REPO_README_TEMPLATE.format(
         repo_id=args.repo_id,
         model_table=model_table,
     )
-    
+
     api.upload_file(
         repo_id=args.repo_id,
         path_or_fileobj=readme_content.encode("utf-8"),

@@ -11,7 +11,9 @@ from common import load_image_as_chw_float01
 
 
 def build_argparser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Run ONNX inference for exported HyCoCLIP image encoder.")
+    p = argparse.ArgumentParser(
+        description="Run ONNX inference for exported HyCoCLIP image encoder."
+    )
     p.add_argument("--onnx", type=Path, required=True, help="Path to exported .onnx")
     p.add_argument("--image", type=Path, required=True, help="Path to an input image")
     p.add_argument("--out", type=Path, required=True, help="Output .npz path")
@@ -52,7 +54,9 @@ def main() -> None:
     elif curv is None:
         np.savez(out_path, hyperboloid=hyper, space=space)
     else:
-        np.savez(out_path, hyperboloid=hyper, space=space, curvature=np.array(curv, dtype=np.float32))
+        np.savez(
+            out_path, hyperboloid=hyper, space=space, curvature=np.array(curv, dtype=np.float32)
+        )
 
     print(f"Wrote: {out_path}")
     print(f"hyperboloid shape: {hyper.shape}")

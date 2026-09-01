@@ -37,7 +37,9 @@ class ONNXModel:
         if self._session is None:
             import onnxruntime as ort
 
-            self._session = ort.InferenceSession(str(self._path), providers=["CPUExecutionProvider"])
+            self._session = ort.InferenceSession(
+                str(self._path), providers=["CPUExecutionProvider"]
+            )
 
     def encode(self, inputs: np.ndarray) -> np.ndarray:
         """Encode preprocessed inputs (B, C, H, W) to embeddings (B, D)."""

@@ -13,8 +13,15 @@ from common import add_repo_to_syspath, hyperboloid_lift, load_image_as_chw_floa
 
 def build_argparser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Run HyCoCLIP/MERU image embedding inference in torch.")
-    p.add_argument("--hycoclip-repo", type=Path, required=True, help="Path to local clone of PalAvik/hycoclip")
-    p.add_argument("--checkpoint", type=Path, required=True, help="Path to .pth checkpoint (e.g. hycoclip_vit_s.pth)")
+    p.add_argument(
+        "--hycoclip-repo", type=Path, required=True, help="Path to local clone of PalAvik/hycoclip"
+    )
+    p.add_argument(
+        "--checkpoint",
+        type=Path,
+        required=True,
+        help="Path to .pth checkpoint (e.g. hycoclip_vit_s.pth)",
+    )
     p.add_argument(
         "--variant",
         choices=["vit_s", "vit_b"],
@@ -34,9 +41,9 @@ def main() -> None:
 
     torch = importlib.import_module("torch")
     build_timm_vit = importlib.import_module("hycoclip.encoders.image_encoders").build_timm_vit
-    transformer_text_encoder_cls = (
-        importlib.import_module("hycoclip.encoders.text_encoders").TransformerTextEncoder
-    )
+    transformer_text_encoder_cls = importlib.import_module(
+        "hycoclip.encoders.text_encoders"
+    ).TransformerTextEncoder
     meru_cls = importlib.import_module("hycoclip.models").MERU
 
     device = torch.device(args.device)
@@ -69,7 +76,9 @@ def main() -> None:
     # PyTorch >=2.6 defaults `torch.load(..., weights_only=True)` which will fail.
     # We intentionally use `weights_only=False` here; only do this for checkpoints
     # you trust.
-    print("Loading checkpoint with torch.load(weights_only=False). Only do this for trusted checkpoints.")
+    print(
+        "Loading checkpoint with torch.load(weights_only=False). Only do this for trusted checkpoints."
+    )
     checkpoint_obj = torch.load(ckpt, map_location="cpu", weights_only=False)
     state_dict = checkpoint_obj["model"] if isinstance(checkpoint_obj, dict) else checkpoint_obj
     model.load_state_dict(state_dict)
