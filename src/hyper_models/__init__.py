@@ -11,6 +11,9 @@ Example:
     >>> model.dim       # 513
 """
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _installed_version
+
 from hyper_models.loader import load
 from hyper_models.loaders import list_loaders
 from hyper_models.models import ONNXModel
@@ -27,4 +30,10 @@ __all__ = [
     "ImageConfig",
     "preprocess_images",
 ]
-__version__ = "0.3.0"
+try:
+    # Read the installed distribution so this cannot drift from pyproject.toml:
+    # a hand-maintained literal here stayed at 0.3.0 through the 0.3.1 release,
+    # and the demo Dockerfiles print this value to confirm what they installed.
+    __version__ = _installed_version("hyper-models")
+except PackageNotFoundError:  # running from a source tree that was never installed
+    __version__ = "0.0.0.dev0"
