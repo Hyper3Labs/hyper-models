@@ -100,18 +100,18 @@ _MODELS: dict[str, ModelInfo] = {
         optional_dependencies=("ml",),
         description="UNCHA ViT-B/16 checkpoint (HF .pth, torch inference)",
     ),
-    "hyper3-clip-v0.5": ModelInfo(
-        name="hyper3-clip-v0.5",
+    "hyper3-clip-v1": ModelInfo(
+        name="hyper3-clip-v1",
         geometry="hyperboloid",
         dim=513,
-        hub_id="hyper3labs/hyper3-clip-v0.5",
+        hub_id="hyper3labs/hyper3-clip-v1",
         hub_path="model.safetensors",
         hub_patterns=("config.yaml", "model.safetensors"),
         license="Unknown",
         loader="hyper3-clip-torch",
         optional_dependencies=("ml",),
         modalities=("image", "text"),
-        description="Hyper3-CLIP v0.5 ViT-B image+text encoder (HF safetensors, torch inference)",
+        description="Hyper3-CLIP v1 ViT-B image+text encoder (HF safetensors, torch inference)",
         image_config=ImageConfig(
             size=224,
             interpolation="bicubic",
@@ -132,6 +132,11 @@ _MODELS: dict[str, ModelInfo] = {
     ),
 }
 
+_ALIASES = {
+    # Compatibility for callers that selected the model before its v1 rename.
+    "hyper3-clip-v0.5": "hyper3-clip-v1",
+}
+
 
 def list_models(geometry: str | None = None) -> list[str]:
     """List available model names, optionally filtered by geometry."""
@@ -142,6 +147,7 @@ def list_models(geometry: str | None = None) -> list[str]:
 
 def get_model_info(name: str) -> ModelInfo:
     """Get metadata for a model. Raises KeyError if not found."""
+    name = _ALIASES.get(name, name)
     if name not in _MODELS:
         raise KeyError(f"Model '{name}' not found. Available: {', '.join(_MODELS.keys())}")
     return _MODELS[name]

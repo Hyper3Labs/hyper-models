@@ -42,7 +42,7 @@ class TestTextTowerKeyAlignment:
 
 class TestTextCapabilityDeclaration:
     def test_hyper3_clip_declares_image_and_text(self) -> None:
-        info = hyper_models.get_model_info("hyper3-clip-v0.5")
+        info = hyper_models.get_model_info("hyper3-clip-v1")
 
         assert info.modalities == ("image", "text")
 

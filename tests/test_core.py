@@ -12,7 +12,7 @@ class TestRegistry:
         models = hyper_models.list_models()
         assert len(models) >= 4
         assert "hycoclip-vit-s" in models
-        assert "hyper3-clip-v0.5" in models
+        assert "hyper3-clip-v1" in models
 
     def test_list_loaders(self):
         loaders = hyper_models.list_loaders()
@@ -22,7 +22,7 @@ class TestRegistry:
 
     def test_list_models_filter(self):
         hyperbolic = hyper_models.list_models(geometry="hyperboloid")
-        assert "hyper3-clip-v0.5" in hyperbolic
+        assert "hyper3-clip-v1" in hyperbolic
         assert all(hyper_models.get_model_info(m).geometry == "hyperboloid" for m in hyperbolic)
 
     def test_get_model_info(self):
@@ -45,13 +45,17 @@ class TestRegistry:
         assert info.hub_path.endswith(".pth")
 
     def test_hyper3_clip_model_info(self):
-        info = hyper_models.get_model_info("hyper3-clip-v0.5")
+        info = hyper_models.get_model_info("hyper3-clip-v1")
         assert info.geometry == "hyperboloid"
         assert info.dim == 513
         assert info.loader == "hyper3-clip-torch"
         assert info.optional_dependencies == ("ml",)
-        assert info.hub_id == "hyper3labs/hyper3-clip-v0.5"
+        assert info.hub_id == "hyper3labs/hyper3-clip-v1"
         assert info.hub_patterns == ("config.yaml", "model.safetensors")
+
+    def test_hyper3_clip_legacy_alias(self):
+        info = hyper_models.get_model_info("hyper3-clip-v0.5")
+        assert info.name == "hyper3-clip-v1"
 
 
 class TestPreprocessing:

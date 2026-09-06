@@ -1,3 +1,9 @@
+## 0.3.2 - 2026-09-06
+
+### Changed
+- Rename the public Hyper3-CLIP catalog entry and Hub target to `hyper3-clip-v1`.
+- Preserve `hyper3-clip-v0.5` as a hidden compatibility alias for existing callers.
+
 ## 0.3.1 - 2026-08-30
 
 ### Fixes

@@ -46,7 +46,7 @@ from PIL import Image
 
 # List available models
 hyper_models.list_models()
-# ['hycoclip-vit-s', 'hycoclip-vit-b', 'meru-vit-s', 'meru-vit-b', 'uncha-vit-s', 'uncha-vit-b', 'hyper3-clip-v0.5']
+# ['hycoclip-vit-s', 'hycoclip-vit-b', 'meru-vit-s', 'meru-vit-b', 'uncha-vit-s', 'uncha-vit-b', 'hyper3-clip-v1']
 
 # Inspect supported internal loader kinds
 hyper_models.list_loaders()
@@ -89,7 +89,7 @@ This keeps callers on one stable API:
 ```python
 model = hyper_models.load("hycoclip-vit-s")
 model = hyper_models.load("uncha-vit-b")
-model = hyper_models.load("hyper3-clip-v0.5")
+model = hyper_models.load("hyper3-clip-v1")
 ```
 
 Callers do not need to know which internal loader is used, except for optional
@@ -118,7 +118,7 @@ HyperView's simple path remains torch-free. If you use the default ONNX-backed
 `hyper-models` entries or the default `embed-anything` provider, HyperView does
 not need PyTorch. PyTorch is only needed when you explicitly select a
 torch-backed catalog entry such as `uncha-vit-s`, `uncha-vit-b`, or
-`hyper3-clip-v0.5`.
+`hyper3-clip-v1`.
 
 ## Models
 
@@ -132,7 +132,7 @@ torch-backed catalog entry such as `uncha-vit-s`, `uncha-vit-b`, or
 | `meru-vit-b` | [![HF](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://huggingface.co/mnm-matin/hyperbolic-clip/tree/main/meru-vit-b) | [ICML 2023](https://arxiv.org/abs/2304.09172) | [facebookresearch/meru](https://github.com/facebookresearch/meru) |
 | `uncha-vit-s` | [![HF](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://huggingface.co/hayeonkim/uncha/blob/main/uncha_vit_s.pth) | [CVPR 2026](https://arxiv.org/abs/2603.22042) | [jeeit17/UNCHA](https://github.com/jeeit17/UNCHA) |
 | `uncha-vit-b` | [![HF](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://huggingface.co/hayeonkim/uncha/blob/main/uncha_vit_b.pth) | [CVPR 2026](https://arxiv.org/abs/2603.22042) | [jeeit17/UNCHA](https://github.com/jeeit17/UNCHA) |
-| `hyper3-clip-v0.5` | [![HF](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://huggingface.co/hyper3labs/hyper3-clip-v0.5) | — | [Hyper3Labs/hyper3-clip](https://github.com/Hyper3Labs/hyper3-clip) |
+| `hyper3-clip-v1` | [![HF](https://img.shields.io/badge/🤗-HuggingFace-yellow)](https://huggingface.co/hyper3labs/hyper3-clip-v1) | — | [Hyper3Labs/hyper3-clip](https://github.com/Hyper3Labs/hyper3-clip) |
 | `hyp-vit` | — | [CVPR 2022](https://arxiv.org/abs/2203.10833) | [htdt/hyp_metric](https://github.com/htdt/hyp_metric) |
 | `hie` | — | [CVPR 2020](https://arxiv.org/abs/1904.02239) | [leymir/hyperbolic-image-embeddings](https://github.com/leymir/hyperbolic-image-embeddings) |
 | `hcnn` | — | [ICLR 2024](https://openreview.net/forum?id=ekz1hN5QNh) | [kschwethelm/HyperbolicCV](https://github.com/kschwethelm/HyperbolicCV) |
