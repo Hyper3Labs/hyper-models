@@ -1,6 +1,6 @@
 [project]
 name = "hyper-models"
-version = "0.3.4"
+version = "0.3.5"
 description = "A model zoo for non-Euclidean embedding models (hyperbolic, spherical, product manifolds)"
 readme = "README.md"
 license = { text = "MIT" }
@@ -44,6 +44,7 @@ ml = [
     "pyyaml>=6.0.0",
     "sentencepiece>=0.2.0",
     "protobuf>=4.25.0",
+    "omegaconf>=2.3.0",
 ]
 
 [project.urls]
