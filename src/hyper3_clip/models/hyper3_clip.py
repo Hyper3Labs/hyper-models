@@ -101,6 +101,8 @@ class Hyper3CLIP(ExperimentalObjectiveMixin, nn.Module):
         fuse_beta_query_encoder_forwards: bool = False,
         group_beta_query_pooling: bool = False,
         objective_autocast_dtype: str = "float32",
+        text_config: dict | None = None,
+        tokenizer_name_or_path: str | None = None,
     ) -> None:
         super().__init__()
         if objective not in {"hycoclip", "uncha", "proclip"}:
@@ -206,7 +208,11 @@ class Hyper3CLIP(ExperimentalObjectiveMixin, nn.Module):
             self.phyclip_num_factors = 0
         self.vision_encoder = VisionEncoder(vision_backbone, pretrained=vision_pretrained)
         self.text_encoder = TextEncoder(
-            text_model_name, pretrained=text_pretrained, pooling=text_pooling
+            text_model_name,
+            pretrained=text_pretrained,
+            pooling=text_pooling,
+            text_config=text_config,
+            tokenizer_name_or_path=tokenizer_name_or_path,
         )
         self.tokenizer = self.text_encoder.tokenizer
         self.embed_dim = embed_dim

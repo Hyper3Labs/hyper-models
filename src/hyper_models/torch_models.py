@@ -6,6 +6,8 @@ They do not create a separate public provider surface.
 
 from __future__ import annotations
 
+import json
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -257,7 +259,7 @@ def _align_text_tower_keys(state: dict[str, Any]) -> dict[str, Any]:
 
 
 class Hyper3ClipTorchModel:
-    """Hyper3-CLIP catalog entry runtime using torch for image inference."""
+    """Hyper3-CLIP image/text inference returning native Lorentz embeddings."""
 
     def __init__(
         self,
@@ -269,11 +271,14 @@ class Hyper3ClipTorchModel:
         device: str | None = None,
     ) -> None:
         self._checkpoint_path = checkpoint_path
-        self._config_path = checkpoint_path.with_name("config.yaml")
+        self._config_path = checkpoint_path.with_name("config.json")
+        if not self._config_path.is_file():
+            self._config_path = checkpoint_path.with_name("config.yaml")
         self.geometry = geometry
         self.dim = dim
         self._image_config = image_config or ImageConfig()
         self._device_override = device
+        self._max_text_length = 77
 
         self._torch = None
         self._device = None
@@ -316,11 +321,41 @@ class Hyper3ClipTorchModel:
         self._torch = torch
         self._device = self._resolve_device(torch)
 
-        config = yaml.safe_load(self._config_path.read_text(encoding="utf-8"))
-        model_config = dict(config["model"])
+        if self._config_path.suffix == ".json":
+            config = json.loads(self._config_path.read_text(encoding="utf-8"))
+            model_config = {
+                key: config[key]
+                for key in (
+                    "vision_backbone",
+                    "text_model_name",
+                    "embed_dim",
+                    "curv_init",
+                    "learn_curv",
+                )
+            }
+            # These constructor arguments affect training losses only.
+            model_config.update(
+                entail_weight=0.0, inter_aperture_scale=0.0, intra_aperture_scale=0.0
+            )
+            model_config["text_config"] = config["text_config"]
+            model_config["tokenizer_name_or_path"] = str(self._checkpoint_path.parent)
+        else:
+            config = yaml.safe_load(self._config_path.read_text(encoding="utf-8"))
+            model_config = dict(config["model"])
+        data_config = config.get("data", config)
+        self._image_config = replace(
+            self._image_config,
+            size=int(data_config.get("image_size", self._image_config.size)),
+            resize_mode="squash",
+        )
+        self._max_text_length = int(data_config.get("max_text_length", 77))
         model_config["vision_pretrained"] = False
         model_config["text_pretrained"] = False
         model = Hyper3CLIP(**model_config)
+        if model.embed_dim + 1 != self.dim:
+            raise ValueError("Hyper3-CLIP embedding dimension does not match the catalog entry")
+        model.curv_min = float(config.get("curvature_min", model.curv_min))
+        model.curv_max = float(config.get("curvature_max", model.curv_max))
         state = _align_text_tower_keys(load_file(self._checkpoint_path, device="cpu"))
         load_result = model.load_state_dict(state, strict=False)
         if load_result.missing_keys:
@@ -346,6 +381,7 @@ class Hyper3ClipTorchModel:
 
     def encode_images(self, images: list[Image.Image]) -> np.ndarray:
         """Encode PIL images to Hyper3-CLIP embeddings (B, D)."""
+        self._ensure_model()
         return self.encode(preprocess_images(images, self._image_config))
 
     def encode_texts(self, texts: list[str]) -> np.ndarray:
@@ -357,7 +393,11 @@ class Hyper3ClipTorchModel:
         assert self._device is not None
 
         encoded = self._model.tokenizer(
-            list(texts), padding=True, truncation=True, return_tensors="pt"
+            list(texts),
+            padding=True,
+            truncation=True,
+            max_length=self._max_text_length,
+            return_tensors="pt",
         )
         input_ids = encoded["input_ids"].to(self._device)
         attention_mask = encoded["attention_mask"].to(self._device)

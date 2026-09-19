@@ -10,6 +10,7 @@ from transformers import (
     CLIPTextConfig,
     CLIPTextModel,
     CLIPTextModelWithProjection,
+    CLIPTokenizerFast,
     CLIPVisionConfig,
     CLIPVisionModel,
     CLIPVisionModelWithProjection,
@@ -99,7 +100,14 @@ class VisionEncoder(nn.Module):
 
 
 class TextEncoder(nn.Module):
-    def __init__(self, model_name: str, pretrained: bool = True, pooling: str = "auto") -> None:
+    def __init__(
+        self,
+        model_name: str,
+        pretrained: bool = True,
+        pooling: str = "auto",
+        text_config: dict | None = None,
+        tokenizer_name_or_path: str | None = None,
+    ) -> None:
         super().__init__()
         if pooling not in {"auto", "pooler", "cls", "mean"}:
             raise ValueError(
@@ -107,10 +115,19 @@ class TextEncoder(nn.Module):
             )
         self.kind = "hf_text"
         self.pooling = pooling
-        tokenizer_name = model_name.removeprefix("hf_clip_projected:")
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        tokenizer_name = tokenizer_name_or_path or model_name.removeprefix("hf_clip_projected:")
+        self.tokenizer = (
+            CLIPTokenizerFast.from_pretrained(tokenizer_name)
+            if text_config is not None
+            else AutoTokenizer.from_pretrained(tokenizer_name)
+        )
         model_name_lower = model_name.lower()
-        if model_name.startswith("hf_clip_projected:"):
+        if text_config is not None:
+            if pretrained or text_config.get("model_type") != "clip_text_model":
+                raise ValueError("Bundled text_config requires a non-pretrained CLIP text encoder")
+            self.backbone = CLIPTextModel(CLIPTextConfig.from_dict(text_config))
+            self.output_dim = self.backbone.config.hidden_size
+        elif model_name.startswith("hf_clip_projected:"):
             self.kind = "hf_clip_projected"
             projected_model_name = model_name.removeprefix("hf_clip_projected:")
             if pretrained:

@@ -95,6 +95,11 @@ model = hyper_models.load("hyper3-clip-v1")
 Callers do not need to know which internal loader is used, except for optional
 dependency installation when choosing entries that need `hyper-models[ml]`.
 
+For `hyper3-clip-v1`, `encode_images(images)` and `encode_texts(texts)` return
+513-coordinate Lorentz embeddings in the same space. The loader downloads the
+model's runtime configuration, weights, and tokenizer together. Complete the
+model's Hugging Face access form and run `hf auth login` before the first download.
+
 ### HyperView integration
 
 HyperView auto-detects `hyper-models` names and routes them to the `hyper-models` provider.

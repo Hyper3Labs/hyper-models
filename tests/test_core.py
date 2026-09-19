@@ -51,7 +51,15 @@ class TestRegistry:
         assert info.loader == "hyper3-clip-torch"
         assert info.optional_dependencies == ("ml",)
         assert info.hub_id == "hyper3labs/hyper3-clip-v1"
-        assert info.hub_patterns == ("config.yaml", "model.safetensors")
+        assert info.hub_patterns == (
+            "config.json",
+            "model.safetensors",
+            "tokenizer.json",
+            "tokenizer_config.json",
+            "vocab.json",
+            "merges.txt",
+        )
+        assert info.license == "OpenMDW-1.0"
 
     def test_hyper3_clip_legacy_alias(self):
         info = hyper_models.get_model_info("hyper3-clip-v0.5")

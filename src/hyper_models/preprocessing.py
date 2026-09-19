@@ -27,6 +27,7 @@ class ImageConfig:
     rescale: float = 1.0 / 255.0
     mean: tuple[float, float, float] | None = None
     std: tuple[float, float, float] | None = None
+    resize_mode: Literal["center_crop", "squash"] = "center_crop"
 
 
 def preprocess_images(images: list[Image.Image], config: ImageConfig | None = None) -> np.ndarray:
@@ -47,14 +48,18 @@ def preprocess_images(images: list[Image.Image], config: ImageConfig | None = No
         if img.mode != "RGB":
             img = img.convert("RGB")
 
-        # Resize shortest side, then center crop
-        w, h = img.size
-        scale = config.size / min(w, h)
-        img = img.resize((int(round(w * scale)), int(round(h * scale))), resample=resample)
-
-        w, h = img.size
-        left, top = (w - config.size) // 2, (h - config.size) // 2
-        img = img.crop((left, top, left + config.size, top + config.size))
+        if config.resize_mode == "squash":
+            img = img.resize((config.size, config.size), resample=resample)
+        elif config.resize_mode == "center_crop":
+            # Resize shortest side, then center crop.
+            w, h = img.size
+            scale = config.size / min(w, h)
+            img = img.resize((int(round(w * scale)), int(round(h * scale))), resample=resample)
+            w, h = img.size
+            left, top = (w - config.size) // 2, (h - config.size) // 2
+            img = img.crop((left, top, left + config.size, top + config.size))
+        else:
+            raise ValueError(f"Unknown resize mode: {config.resize_mode!r}")
 
         # To float32 CHW
         arr = np.asarray(img, dtype=np.float32) * config.rescale
