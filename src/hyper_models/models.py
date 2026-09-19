@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+from shutil import copyfile
+from tempfile import TemporaryDirectory
 
 import numpy as np
 from PIL import Image
@@ -32,14 +34,26 @@ class ONNXModel:
         self._output_name = output_name
         self._image_config = image_config or ImageConfig()
         self._session = None
+        self._artifact_directory = None
 
     def _ensure_session(self) -> None:
         if self._session is None:
             import onnxruntime as ort
 
-            self._session = ort.InferenceSession(
-                str(self._path), providers=["CPUExecutionProvider"]
-            )
+            path = self._path
+            # Hub snapshots link the graph and external weights to different
+            # blob directories. New ONNX Runtime versions correctly reject
+            # external data outside the resolved graph directory. Materialize
+            # our catalog's graph and sidecars together, keeping validation on.
+            artifacts = [path, *path.parent.glob(f"{path.name}.*")]
+            if any(artifact.is_symlink() for artifact in artifacts):
+                self._artifact_directory = TemporaryDirectory(prefix="hyper-models-onnx-")
+                directory = Path(self._artifact_directory.name)
+                for artifact in artifacts:
+                    if artifact.is_file():
+                        copyfile(artifact, directory / artifact.name)
+                path = directory / path.name
+            self._session = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
 
     def encode(self, inputs: np.ndarray) -> np.ndarray:
         """Encode preprocessed inputs (B, C, H, W) to embeddings (B, D)."""
