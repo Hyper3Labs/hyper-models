@@ -55,7 +55,7 @@ hyper_models.list_loaders()
 # Load model (auto-downloads from Hugging Face Hub)
 model = hyper_models.load("hycoclip-vit-s")
 model.geometry  # 'hyperboloid'
-model.dim       # 513
+model.dim  # 513
 
 # Encode PIL images
 images = [Image.open("image.jpg")]
@@ -63,9 +63,9 @@ embeddings = model.encode_images(images)  # (1, 513) ndarray
 
 # Get model info
 info = hyper_models.get_model_info("hycoclip-vit-s")
-info.hub_id     # 'mnm-matin/hyperbolic-clip'
-info.loader     # 'onnx'
-info.license    # 'CC-BY-NC'
+info.hub_id  # 'mnm-matin/hyperbolic-clip'
+info.loader  # 'onnx'
+info.license  # 'CC-BY-NC'
 
 # Low-level: preprocess images yourself
 batch = hyper_models.preprocess_images(images)  # (B, 3, 224, 224)
@@ -108,10 +108,10 @@ HyperView auto-detects `hyper-models` names and routes them to the `hyper-models
 import hyperview as hv
 
 dataset = hv.Dataset.from_huggingface(
-  name="demo",
-  hf_dataset="uoft-cs/cifar10",
-  split="train",
-  image_key="img",
+    name="demo",
+    hf_dataset="uoft-cs/cifar10",
+    split="train",
+    image_key="img",
 )
 
 # Uses provider='hyper-models' automatically.
