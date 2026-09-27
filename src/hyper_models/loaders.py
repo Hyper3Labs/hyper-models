@@ -10,10 +10,10 @@ from hyper_models.registry import ModelInfo
 
 __all__ = ["list_loaders", "load_model"]
 
-LoaderFn = Callable[[ModelInfo, Path], Any]
+LoaderFn = Callable[[ModelInfo, Path, str | None], Any]
 
 
-def _load_onnx_model(info: ModelInfo, artifact_path: Path) -> ONNXModel:
+def _load_onnx_model(info: ModelInfo, artifact_path: Path, device: str | None = None) -> ONNXModel:
     return ONNXModel(
         path=artifact_path,
         geometry=info.geometry,
@@ -24,7 +24,9 @@ def _load_onnx_model(info: ModelInfo, artifact_path: Path) -> ONNXModel:
     )
 
 
-def _load_uncha_image_torch_model(info: ModelInfo, artifact_path: Path) -> Any:
+def _load_uncha_image_torch_model(
+    info: ModelInfo, artifact_path: Path, device: str | None = None
+) -> Any:
     if info.variant is None:
         raise ValueError(f"UNCHA model '{info.name}' is missing a registry variant")
 
@@ -36,10 +38,13 @@ def _load_uncha_image_torch_model(info: ModelInfo, artifact_path: Path) -> Any:
         dim=info.dim,
         variant=info.variant,
         image_config=info.image_config,
+        device=device,
     )
 
 
-def _load_hyper3_clip_torch_model(info: ModelInfo, artifact_path: Path) -> Any:
+def _load_hyper3_clip_torch_model(
+    info: ModelInfo, artifact_path: Path, device: str | None = None
+) -> Any:
     from hyper_models.torch_models import Hyper3ClipTorchModel
 
     return Hyper3ClipTorchModel(
@@ -47,10 +52,11 @@ def _load_hyper3_clip_torch_model(info: ModelInfo, artifact_path: Path) -> Any:
         geometry=info.geometry,
         dim=info.dim,
         image_config=info.image_config,
+        device=device,
     )
 
 
-def _load_timm_image_route(info: ModelInfo, artifact_path: Path) -> Any:
+def _load_timm_image_route(info: ModelInfo, artifact_path: Path, device: str | None = None) -> Any:
     raise ValueError(
         f"Model '{info.name}' is a timm model. "
         f"Use HyperView provider='timm-image' with model='hf-hub:{info.hub_id}' instead.\n"
@@ -71,7 +77,7 @@ def list_loaders() -> list[str]:
     return sorted(_LOADERS)
 
 
-def load_model(info: ModelInfo, artifact_path: Path) -> Any:
+def load_model(info: ModelInfo, artifact_path: Path, *, device: str | None = None) -> Any:
     """Instantiate a catalog entry using the loader declared in ``ModelInfo``."""
     try:
         loader = _LOADERS[info.loader]
@@ -81,4 +87,4 @@ def load_model(info: ModelInfo, artifact_path: Path) -> Any:
             f"Unsupported loader '{info.loader}' for model '{info.name}'. Available: {available}"
         ) from None
 
-    return loader(info, artifact_path)
+    return loader(info, artifact_path, device)

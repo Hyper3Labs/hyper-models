@@ -1,0 +1,10 @@
+hyper-models
+Copyright (c) 2025 Hyper3Labs
+
+The SDK is distributed under the MIT license in LICENSE. The optional
+Haystack integration in src/hyper_models/integrations/haystack is adapted
+from Hyper3Labs/haystack-hyper3 v0.1.0, Copyright (c) 2026 hyper³labs,
+and retains its Apache License 2.0 in LICENSES/Apache-2.0.txt.
+
+The Haystack components now use the hyper-models SDK for model loading and
+inference. Model weights and datasets retain their separate licenses.

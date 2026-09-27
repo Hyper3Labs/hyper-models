@@ -1,3 +1,18 @@
+## 0.4.0 - 2026-09-27
+
+### Added
+- Optional Haystack image and text embedders in `hyper_models.integrations.haystack`,
+  installed with `hyper-models[ml,haystack]`. They reuse the SDK's Transformers 5
+  runtime and produce native 513-coordinate Lorentz embeddings.
+- Optional `revision`, `token`, `local_files_only`, and `device` arguments to
+  `load()`, and a public `warm_up()` method on the Hyper3-CLIP runtime.
+
+### Changed
+- The standalone `hyper3-haystack` integration moves into this SDK. Update imports
+  and recreate saved pipelines with the new component paths.
+- The migrated Haystack components retain Apache-2.0 alongside the SDK's MIT
+  license. Both licenses ship in the distributions; see NOTICE.
+
 ## 0.3.2 - 2026-09-06
 
 ### Changed

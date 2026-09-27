@@ -1,17 +1,17 @@
 [project]
 name = "hyper-models"
-version = "0.3.5"
+version = "0.4.0"
 description = "A model zoo for non-Euclidean embedding models (hyperbolic, spherical, product manifolds)"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT AND Apache-2.0"
+license-files = ["LICENSE", "NOTICE", "LICENSES/*.txt"]
 requires-python = ">=3.10"
-authors = [{ name = "hyper3labs" }]
+authors = [{ name = "hyper³labs" }]
 keywords = ["embeddings", "hyperbolic", "onnx", "clip", "model-zoo", "non-euclidean"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -46,6 +46,7 @@ ml = [
     "protobuf>=4.25.0",
     "omegaconf>=2.3.0",
 ]
+haystack = ["haystack-ai>=3.2,<4"]
 
 [project.urls]
 Homepage = "https://github.com/Hyper3Labs/hyper-models"
@@ -54,14 +55,14 @@ Documentation = "https://github.com/Hyper3Labs/hyper-models#readme"
 Issues = "https://github.com/Hyper3Labs/hyper-models/issues"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hyper_models", "src/hyper3_clip"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src", "/README.md", "/LICENSE"]
+include = ["/src", "/README.md", "/CHANGELOG.md", "/LICENSE", "/NOTICE", "/LICENSES", "/examples"]
 
 [tool.ruff]
 line-length = 100
@@ -73,3 +74,5 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["-m", "not integration"]
+markers = ["integration: requires the gated Hyper3-CLIP model weights"]

@@ -29,11 +29,9 @@ jobs:
 
       - name: Ruff lint
         run: uv run ruff check .
-        continue-on-error: true
 
       - name: Ruff format
         run: uv run ruff format --check .
-        continue-on-error: true
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -61,4 +59,27 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run tests
-        run: uv run pytest -v
+        run: uv run pytest -v -m "not integration"
+
+      - name: Check optional imports stay optional
+        run: uv run python -c "import sys, hyper_models; assert 'torch' not in sys.modules; assert 'haystack' not in sys.modules"
+
+  haystack:
+    name: Haystack (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: astral-sh/setup-uv@v7
+      - name: Install current stable runtime
+        run: uv pip install --system ".[dev,ml,haystack]" --torch-backend cpu
+      - name: Check Haystack integration and SDK
+        run: python -m pytest -v -m "not integration"
+      - name: Check changed Python modules
+        run: ruff check src/hyper_models/integrations src/hyper_models/loader.py src/hyper_models/loaders.py src/hyper_models/torch_models.py tests/test_haystack_integration.py tests/test_loader_options.py examples

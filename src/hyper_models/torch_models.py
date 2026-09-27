@@ -365,6 +365,10 @@ class Hyper3ClipTorchModel:
         model.eval()
         self._model = model
 
+    def warm_up(self) -> None:
+        """Load model weights and tokenizer before the first inference call."""
+        self._ensure_model()
+
     def encode(self, inputs: np.ndarray) -> np.ndarray:
         """Encode preprocessed inputs (B, C, H, W) to embeddings (B, D)."""
         self._ensure_model()

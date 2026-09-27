@@ -10,8 +10,8 @@
   <a href="https://huggingface.co/mnm-matin/hyperbolic-clip">
     <img src="https://img.shields.io/badge/🤗_Models-hyperbolic--clip-orange" alt="Hugging Face">
   </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-MIT-blue" alt="License: MIT">
+  <a href="NOTICE">
+    <img src="https://img.shields.io/badge/License-MIT%20%26%20Apache--2.0-blue" alt="Licenses: MIT and Apache-2.0">
   </a>
 </p>
 
@@ -100,6 +100,64 @@ For `hyper3-clip-v1`, `encode_images(images)` and `encode_texts(texts)` return
 model's runtime configuration, weights, and tokenizer together. Complete the
 model's Hugging Face access form and run `hf auth login` before the first download.
 
+`load()` also accepts `revision`, `token`, `local_files_only`, and `device` as
+keyword arguments. Pin `revision` when queries must use the same weights as an
+existing image index. The Hyper3-CLIP runtime exposes `warm_up()` for explicit loading.
+
+### Haystack integration
+
+Install the optional integration and the Transformers 5 model runtime:
+
+```bash
+pip install "hyper-models[ml,haystack]>=0.4.0"
+```
+
+```python
+from hyper_models.integrations.haystack import (
+    Hyper3DocumentImageEmbedder,
+    Hyper3TextEmbedder,
+)
+```
+
+The components wrap the SDK's Hyper3-CLIP image and text encoders and return native
+513-coordinate Lorentz embeddings. Both pin the released model revision by
+default and share a loaded model when their configuration matches. Complete the
+model's access form and authenticate with `hf auth login`, `HF_TOKEN`, or
+`HF_API_TOKEN` before first use.
+
+For retrieval, store the native image embeddings unchanged. Use Haystack's
+`OutputAdapter` to negate only the first query coordinate before passing it to
+an `InMemoryEmbeddingRetriever` backed by a dot-product document store:
+
+```python
+from haystack.components.converters import OutputAdapter
+
+lorentz_query = OutputAdapter(
+    template="{{ [-embedding[0]] + embedding[1:] }}",
+    output_type=list[float],
+)
+```
+
+This computes the Lorentz inner product, `-q0*x0 + qs·xs`. Higher scores rank
+nearer points first; use `scale_score=False` to retain the raw scores. See the
+[complete indexing and retrieval example](examples/haystack_lorentz_retrieval.py).
+Query and image embeddings must use the same model revision. Normalizing vectors
+changes the scoring; approximate indexes need separate recall validation.
+
+Users of the retired `hyper3-haystack` package should install the extra above and
+change the import to `hyper_models.integrations.haystack`. The component names
+and native embedding format are unchanged; saved pipelines must be recreated
+with the new import path. The optional module is not imported by the base SDK.
+These components accept the `hyper3-clip-v1` catalog name or its Hub ID and load
+Hub snapshots, including cached offline snapshots. For arbitrary local checkpoint
+files, use the SDK's `load(..., local_path=...)` API directly.
+When loading a trusted saved pipeline, allow the module explicitly:
+`Pipeline.loads(yaml_text, allowed_modules=["hyper_models.integrations.haystack"])`.
+
+Run the SDK tests with `pytest -m "not integration"`. After caching the pinned
+model, run `pytest -m integration tests/test_haystack_live.py` for the real image,
+text, and Lorentz retrieval check.
+
 ### HyperView integration
 
 HyperView auto-detects `hyper-models` names and routes them to the `hyper-models` provider.
@@ -173,3 +231,8 @@ See [export/hycoclip/README.md](export/hycoclip/README.md) for details.
 - [HyCoCLIP](https://github.com/PalAvik/hycoclip)
 - [MERU](https://github.com/facebookresearch/meru)
 - [geoopt](https://github.com/geoopt/geoopt)
+
+## License
+
+The SDK uses the MIT license. The optional Haystack integration retains its
+Apache-2.0 license; see [NOTICE](NOTICE). Model weights retain their own licenses.
