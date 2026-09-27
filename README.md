@@ -144,10 +144,7 @@ nearer points first; use `scale_score=False` to retain the raw scores. See the
 Query and image embeddings must use the same model revision. Normalizing vectors
 changes the scoring; approximate indexes need separate recall validation.
 
-Users of the retired `hyper3-haystack` package should install the extra above and
-change the import to `hyper_models.integrations.haystack`. The component names
-and native embedding format are unchanged; saved pipelines must be recreated
-with the new import path. The optional module is not imported by the base SDK.
+The optional module is not imported by the base SDK.
 These components accept the `hyper3-clip-v1` catalog name or its Hub ID and load
 Hub snapshots, including cached offline snapshots. For arbitrary local checkpoint
 files, use the SDK's `load(..., local_path=...)` API directly.
